@@ -5,14 +5,12 @@ using UnityEngine;
 
 public unsafe class MemoryAlignmentTest : MonoBehaviour
 {
-    const int TEST_COUNT = 10000000;
+    const int TEST_COUNT = 1000000;
 
     protected Contexts _contexts   = null;
 
     protected Stopwatch _stopwatch1 = null;
     protected Stopwatch _stopwatch2 = null;
-
-    protected EntitiesMemoryAlignment * _entitiesMemoryAlignment = null;
 
     void Start()
     {
@@ -38,41 +36,40 @@ public unsafe class MemoryAlignmentTest : MonoBehaviour
         }
         _stopwatch1.Stop();
 
-        UnityEngine.Debug.Log("111ElapsedMilliseconds-->" + _stopwatch1.ElapsedMilliseconds);
+        UnityEngine.Debug.Log("Without MemoryAlignment ElapsedMilliseconds-->" + _stopwatch1.ElapsedMilliseconds);
 
         ////////////////////////////////////////////////////////////
-        _entitiesMemoryAlignment = (EntitiesMemoryAlignment*)Marshal.AllocHGlobal(sizeof(EntitiesMemoryAlignment)).ToPointer();
-        NativeZero((byte*)_entitiesMemoryAlignment, sizeof(EntitiesMemoryAlignment));
+        EntityMemoryAlignment * entityMemoryAlignment = (EntityMemoryAlignment*)Marshal.AllocHGlobal(sizeof(EntityMemoryAlignment)).ToPointer();
+        ZeroMemory((byte*)entityMemoryAlignment, sizeof(EntityMemoryAlignment));
 
-        var entityPtr = _entitiesMemoryAlignment->Goblin(0);
-        entityPtr->Transform2D.Position = new Vector2Int(1, 2);
-        entityPtr->Transform2D.Rotation = 90;
+        entityMemoryAlignment->Transform2D.Position = new Vector2Int(1, 2);
+        entityMemoryAlignment->Transform2D.Rotation = 90;
 
-        entityPtr->DynamicBody.Layer = 100;
-        entityPtr->DynamicBody.Velocity = new Vector2Int(3, 4);
-        entityPtr->DynamicBody.AngularVelocity = 30;
-        entityPtr->DynamicBody.IsTrigger = true;
+        entityMemoryAlignment->DynamicBody.Layer = 100;
+        entityMemoryAlignment->DynamicBody.Velocity = new Vector2Int(3, 4);
+        entityMemoryAlignment->DynamicBody.AngularVelocity = 30;
+        entityMemoryAlignment->DynamicBody.IsTrigger = true;
 
         _stopwatch2.Start();
         for (int i = 0; i < TEST_COUNT; i++)
         {
-            var x = entityPtr->Transform2D.Position.x;
-            var y = entityPtr->Transform2D.Position.y;
-            var rotation = entityPtr->Transform2D.Rotation;
+            var x = entityMemoryAlignment->Transform2D.Position.x;
+            var y = entityMemoryAlignment->Transform2D.Position.y;
+            var rotation = entityMemoryAlignment->Transform2D.Rotation;
 
-            var layer           = entityPtr->DynamicBody.Layer;
-            var velocity        = entityPtr->DynamicBody.Velocity;
-            var angularVelocity = entityPtr->DynamicBody.AngularVelocity;
-            var isTrigger       = entityPtr->DynamicBody.IsTrigger;
+            var layer           = entityMemoryAlignment->DynamicBody.Layer;
+            var velocity        = entityMemoryAlignment->DynamicBody.Velocity;
+            var angularVelocity = entityMemoryAlignment->DynamicBody.AngularVelocity;
+            var isTrigger       = entityMemoryAlignment->DynamicBody.IsTrigger;
         }
         _stopwatch2.Stop();
 
-        UnityEngine.Debug.Log("222ElapsedMilliseconds-->" + _stopwatch2.ElapsedMilliseconds);
+        UnityEngine.Debug.Log("MemoryAlignment ElapsedMilliseconds-->" + _stopwatch2.ElapsedMilliseconds);
 
-        Marshal.FreeHGlobal(new IntPtr(_entitiesMemoryAlignment));
+        Marshal.FreeHGlobal(new IntPtr(entityMemoryAlignment));
     }
 
-    public unsafe static void NativeZero(byte* ptr, int size)
+    public unsafe static void ZeroMemory(byte* ptr, int size)
     {
         for (int num = size - 1; num >= 0; num--)
         {
